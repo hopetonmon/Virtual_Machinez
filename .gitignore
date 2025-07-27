@@ -1,0 +1,5 @@
+terraform.tfvars
+.terraform
+login_terraform.sh
+.terraform.lock.hcl
+terraform.tfstate
