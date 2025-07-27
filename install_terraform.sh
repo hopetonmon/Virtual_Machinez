@@ -1,3 +1,8 @@
+#Use script below to install terraform on gitpod
+
+#1.)Give the file executable permissions with chmod +x install_terraform.sh
+#2.)Next, run the file with ./install_terraform.sh
+
 #!/bin/bash
 
 # Define the desired Terraform version
