@@ -35,5 +35,12 @@ variable "HOPETONMON_COPY_SECRET_KEY" {
 variable "AWS_REGION" {
     description = "AWS Region"
     type        = string
-    sensitive = true
+}
+
+#------------------PROVIDER DEFINITION----------------------
+provider "aws" {
+    region     = var.AWS_REGION
+    access_key = var.HOPETONMON_COPY_ACCESS_KEY
+    secret_key = var.HOPETONMON_COPY_SECRET_KEY
+  
 }
