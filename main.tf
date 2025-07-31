@@ -17,3 +17,23 @@ terraform {
     }
   }
 }
+
+#-----------------------VARIABLES-----------------------------
+variable "HOPETONMON_COPY_ACCESS_KEY" {
+    description = "HopetonMon Copy AWS Access Key"
+    type        = string
+    sensitive = true
+}
+
+variable "HOPETONMON_COPY_SECRET_KEY" {
+    description = "HopetonMon Copy AWS Secret Key"
+    type        = string
+    sensitive = true
+  
+}
+
+variable "AWS_REGION" {
+    description = "AWS Region"
+    type        = string
+    sensitive = true
+}
