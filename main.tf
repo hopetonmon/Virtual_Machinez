@@ -106,19 +106,29 @@ resource "aws_route_table_association" "public_subnet1_route_table_assoc" {
 }
 
 #-------------------SECURITY GROUP---------------------
-resource "aws_security_group" "allow_ssh" {
-    vpc_id = aws_vpc.vm_vpc.id
-    name   = "web_sg"
-    description = "Allow SSH traffic " #Should only allow SSH form know ip addresses.
+resource "aws_security_group" "sg" {
+    vpc_id = aws_vpc.web_vpc.id
+    name   = "sg"
+    description = "Allow HTTP and SSH traffic " #Should only allow SSH form know ip addresses.
   
-
+    ingress {
+        from_port   = 80
+        to_port     = 80
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"] #Allow HTTP traffic from anywhere
+    } 
     ingress {
         from_port   = 22
         to_port     = 22
         protocol    = "tcp"
         cidr_blocks = ["0.0.0.0/0"] #Allow SSH traffic from any(where
     }
-
+    ingress {
+        from_port   = 443
+        to_port     = 443
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"] #Allow HTTPS traffic from anywhere
+    }
     egress {
         from_port   = 0
         to_port     = 0
@@ -126,6 +136,6 @@ resource "aws_security_group" "allow_ssh" {
         cidr_blocks = ["0.0.0.0/0"]
     }
     tags = {
-        Name = "vm_sg"
+        Name = "web_sg"
     }
 }
