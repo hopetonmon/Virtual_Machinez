@@ -173,6 +173,14 @@ resource "aws_launch_template" "linux_vm" {
   EOF
 }
 
+#------------AWS INSTANCE----------------------
+resource "aws_instance" "linux_vm" {
+  launch_template {
+    id      = aws_launch_template.linux_vm.id
+    version = "$Latest"
+  }
+}
+
 #--------------------------OUTPUTS----------------
 output "vm_instance_details" {
   description = "Details of the EC2 VM instance"
