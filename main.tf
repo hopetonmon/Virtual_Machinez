@@ -78,6 +78,14 @@ resource "aws_subnet" "public_subnet1" {
     }
 }
 
+#-------------------INTERNET GATEWAY---------------------
+resource "aws_internet_gateway" "igw" {
+    vpc_id = aws_vpc.web_vpc.id
+    tags = {
+        Name = "igw"
+    }
+}
+
 #-------------------SECURITY GROUP---------------------
 resource "aws_security_group" "allow_ssh" {
     vpc_id = aws_vpc.vm_vpc.id
