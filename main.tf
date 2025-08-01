@@ -77,3 +77,28 @@ resource "aws_subnet" "public_subnet1" {
         Name = "public_subnet1"
     }
 }
+
+#-------------------SECURITY GROUP---------------------
+resource "aws_security_group" "allow_ssh" {
+    vpc_id = aws_vpc.vm_vpc.id
+    name   = "web_sg"
+    description = "Allow SSH traffic " #Should only allow SSH form know ip addresses.
+  
+
+    ingress {
+        from_port   = 22
+        to_port     = 22
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"] #Allow SSH traffic from any(where
+    }
+
+    egress {
+        from_port   = 0
+        to_port     = 0
+        protocol    = "-1" #Allow all outbound traffic with any protocol
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+    tags = {
+        Name = "vm_sg"
+    }
+}
