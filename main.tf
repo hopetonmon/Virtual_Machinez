@@ -141,3 +141,34 @@ resource "aws_security_group" "sg" {
 }
 
 #-------------------LAUNCH TEMPLATE---------------------
+# Launch template for your Linux VM
+resource "aws_launch_template" "linux_vm" {
+  name_prefix   = "linux-vm-"
+  image_id      = "ami-0b59bfac6be064b78" # Amazon Linux 2 in us-east-1, update if needed
+  instance_type = "t2.micro"
+
+  key_name = "car_key"
+
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups             = [aws_security_group.sg.id]
+    subnet_id                   = aws_subnet.public_subnet1.id
+  }
+
+  # Optional: user data to install desktop environment & RDP server (P=2ez)
+  user_data = <<-EOF
+    #!/bin/bash
+    sudo yum update -y
+    sudo amazon-linux-extras install mate-desktop1.x -y
+    sudo yum install xrdp -y
+    sudo systemctl enable xrdp
+    sudo systemctl start xrdp
+    # Set password for ec2-user
+    echo "ec2-user:2ez" | sudo chpasswd
+    # Open firewall for RDP
+    sudo systemctl enable firewalld
+    sudo systemctl start firewalld
+    sudo firewall-cmd --permanent --add-port=3389/tcp
+    sudo firewall-cmd --reload
+  EOF
+}
