@@ -44,3 +44,13 @@ provider "aws" {
     secret_key = var.HOPETONMON_COPY_SECRET_KEY
   
 }
+
+#-------------------VPC---------------------
+resource "aws_vpc" "vm_vpc" {
+    cidr_block = "10.0.0.0/16"
+    enable_dns_support = true #Enables or disables DNS resolution within the VPC.
+    enable_dns_hostnames = true # Enables or disables the assignment of public DNS hostnames to instances launched in the VPC.
+    tags = {
+        Name = "vm_vpc"
+    }
+}
