@@ -99,6 +99,11 @@ resource "aws_route_table" "igw_route_table" {
     }
 }
 
+#-------------------ROUTE TABLE ASSOCIATION---------------------
+resource "aws_route_table_association" "public_subnet1_route_table_assoc" {
+    subnet_id      = aws_subnet.public_subnet1.id  # Associate the route table with your subnet
+    route_table_id = aws_route_table.igw_route_table.id
+}
 
 #-------------------SECURITY GROUP---------------------
 resource "aws_security_group" "allow_ssh" {
