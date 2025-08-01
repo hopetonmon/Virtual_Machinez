@@ -172,3 +172,14 @@ resource "aws_launch_template" "linux_vm" {
     sudo firewall-cmd --reload
   EOF
 }
+
+#--------------------------OUTPUTS----------------
+output "vm_instance_details" {
+  description = "Details of the EC2 VM instance"
+  value = {
+    public_ip       = aws_instance.linux_vm.public_ip
+    public_dns      = aws_instance.linux_vm.public_dns
+    instance_id     = aws_instance.linux_vm.id
+    availability_zone = aws_instance.linux_vm.availability_zone
+  }
+}
