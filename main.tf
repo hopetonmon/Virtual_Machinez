@@ -80,7 +80,7 @@ resource "aws_subnet" "public_subnet1" {
 
 #-------------------INTERNET GATEWAY---------------------
 resource "aws_internet_gateway" "igw" {
-    vpc_id = aws_vpc.web_vpc.id
+    vpc_id = aws_vpc.vm_vpc.id
     tags = {
         Name = "igw"
     }
@@ -107,7 +107,7 @@ resource "aws_route_table_association" "public_subnet1_route_table_assoc" {
 
 #-------------------SECURITY GROUP---------------------
 resource "aws_security_group" "sg" {
-    vpc_id = aws_vpc.web_vpc.id
+    vpc_id = aws_vpc.vm_vpc.id
     name   = "sg"
     description = "Allow HTTP and SSH traffic " #Should only allow SSH form know ip addresses.
   
@@ -139,3 +139,5 @@ resource "aws_security_group" "sg" {
         Name = "web_sg"
     }
 }
+
+#-------------------LAUNCH TEMPLATE---------------------
