@@ -86,6 +86,20 @@ resource "aws_internet_gateway" "igw" {
     }
 }
 
+#-------------------ROUTE TABLE---------------------
+resource "aws_route_table" "igw_route_table" {
+    vpc_id = aws_vpc.vm_vpc.id
+    route {
+        cidr_block = "0.0.0.0/0"
+        gateway_id = aws_internet_gateway.igw.id
+  
+}
+    tags = {
+        Name = "igw_route_table"
+    }
+}
+
+
 #-------------------SECURITY GROUP---------------------
 resource "aws_security_group" "allow_ssh" {
     vpc_id = aws_vpc.vm_vpc.id
