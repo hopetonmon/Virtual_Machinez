@@ -148,39 +148,58 @@ resource "aws_security_group" "sg" {
 }
 
 #-------------------LAUNCH TEMPLATE---------------------
-resource "aws_launch_template" "linux_vm" {
-  name_prefix   = "linux-vm-"
-  image_id      = "ami-0b59bfac6be064b78"
+# Launch template for Linux AMI with desktop environment and RDP setup
+resource "aws_launch_template" "web_launch_template" {
+  name_prefix   = "web-launch-template-"
+  image_id      = "ami-0b59bfac6be064b78"  # Replace with a suitable Linux AMI ID in us-east-2
   instance_type = "t2.micro"
+  key_name      = "car_key"
 
-  key_name = "car_key"
+  vpc_security_group_ids = [aws_security_group.sg.id]
 
-  network_interfaces {
-    associate_public_ip_address = true
-    security_groups             = [aws_security_group.sg.id]
-    subnet_id                   = aws_subnet.public_subnet1.id
-  }
-
-  # Use user_data directly; Terraform will encode it
-  user_data = <<-EOF
+  user_data = base64encode(<<-EOF
     #!/bin/bash
+    # Update packages
     sudo yum update -y
-    sudo amazon-linux-extras install mate-desktop1.x -y
+
+    # Install desktop environment and xrdp
+    sudo yum groupinstall "Server with GUI" -y
     sudo yum install xrdp -y
+
+    # Enable and start xrdp
     sudo systemctl enable xrdp
     sudo systemctl start xrdp
-    echo "ec2-user:2ez" | sudo chpasswd
-    sudo systemctl enable firewalld
-    sudo systemctl start firewalld
+
+    # Allow RDP through firewall
     sudo firewall-cmd --permanent --add-port=3389/tcp
     sudo firewall-cmd --reload
-  EOF
-}
 
+    # Create a new user (optional)
+    sudo useradd -m -s /bin/bash ubuntu
+    echo "ubuntu:your_password" | sudo chpasswd
+
+    # Adjust SELinux if necessary
+    sudo setsebool -P httpd_can_network_connect 1
+  EOF
+  )
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = {
+    Name = "linux-desktop-rdp"
+  }
+}
 #------------AWS INSTANCE----------------------
 resource "aws_instance" "linux_vm" {
+  depends_on = [aws_launch_template.web_launch_template, aws_subnet.public_subnet1]
+  
+  # Add the subnet_id argument here
+  subnet_id = aws_subnet.public_subnet1.id
+
   launch_template {
-    id      = aws_launch_template.linux_vm.id
+    id      = aws_launch_template.web_launch_template.id
     version = "$Latest"
   }
 }
