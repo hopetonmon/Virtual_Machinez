@@ -129,6 +129,13 @@ resource "aws_security_group" "sg" {
         protocol    = "tcp"
         cidr_blocks = ["0.0.0.0/0"] #Allow HTTPS traffic from anywhere
     }
+    ingress {
+    description      = "RDP"
+    from_port        = 3389
+    to_port          = 3389
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    }
     egress {
         from_port   = 0
         to_port     = 0
@@ -141,10 +148,9 @@ resource "aws_security_group" "sg" {
 }
 
 #-------------------LAUNCH TEMPLATE---------------------
-# Launch template for your Linux VM
 resource "aws_launch_template" "linux_vm" {
   name_prefix   = "linux-vm-"
-  image_id      = "ami-0b59bfac6be064b78" # Amazon Linux 2 in us-east-1, update if needed
+  image_id      = "ami-0b59bfac6be064b78"
   instance_type = "t2.micro"
 
   key_name = "car_key"
@@ -155,7 +161,7 @@ resource "aws_launch_template" "linux_vm" {
     subnet_id                   = aws_subnet.public_subnet1.id
   }
 
-  # Optional: user data to install desktop environment & RDP server (P=2ez)
+  # Use user_data directly; Terraform will encode it
   user_data = <<-EOF
     #!/bin/bash
     sudo yum update -y
@@ -163,9 +169,7 @@ resource "aws_launch_template" "linux_vm" {
     sudo yum install xrdp -y
     sudo systemctl enable xrdp
     sudo systemctl start xrdp
-    # Set password for ec2-user
     echo "ec2-user:2ez" | sudo chpasswd
-    # Open firewall for RDP
     sudo systemctl enable firewalld
     sudo systemctl start firewalld
     sudo firewall-cmd --permanent --add-port=3389/tcp
