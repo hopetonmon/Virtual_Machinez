@@ -148,38 +148,41 @@ resource "aws_security_group" "sg" {
 }
 
 #-------------------LAUNCH TEMPLATE---------------------
-# Launch template for Linux AMI with desktop environment and RDP setup
-resource "aws_launch_template" "web_launch_template" {
-  name_prefix   = "web-launch-template-"
-  image_id      = "ami-0b59bfac6be064b78"  # Replace with a suitable Linux AMI ID in us-east-2
-  instance_type = "t2.micro"
+# Launch template for Ubuntu 22.04 with MATE + RDP
+resource "aws_launch_template" "vm_launch_template" {
+  name_prefix   = "vm-launch-template-"
+  image_id      = data.aws_ami.ubuntu_22_04_x86.id # Ubuntu 22.04 LTS x86_64 in us-east-2
+  instance_type = "t3.micro"              # Free-tier eligible and Nitro/UEFI supported
   key_name      = "car_key"
 
   vpc_security_group_ids = [aws_security_group.sg.id]
 
   user_data = base64encode(<<-EOF
     #!/bin/bash
-    # Update packages
-    sudo yum update -y
+    set -eux
 
-    # Install desktop environment and xrdp
-    sudo yum groupinstall "Server with GUI" -y
-    sudo yum install xrdp -y
+    # 1. Set RDP password for ec2-user (create if missing)
+    id -u ec2-user || useradd -m ec2-user
+    echo "ec2-user:YourStrongPassword123" | chpasswd
 
-    # Enable and start xrdp
-    sudo systemctl enable xrdp
-    sudo systemctl start xrdp
+    # 2. Update packages and install MATE Desktop + xrdp
+    apt-get update -y
+    DEBIAN_FRONTEND=noninteractive apt-get install -y ubuntu-mate-desktop xrdp
 
-    # Allow RDP through firewall
-    sudo firewall-cmd --permanent --add-port=3389/tcp
-    sudo firewall-cmd --reload
+    # 3. Enable and start xrdp
+    systemctl enable xrdp
+    systemctl restart xrdp
 
-    # Create a new user (optional)
-    sudo useradd -m -s /bin/bash ubuntu
-    echo "ubuntu:your_password" | sudo chpasswd
+    # 4. Configure .xsession for MATE
+    echo "mate-session" > /home/ec2-user/.xsession
+    chown ec2-user:ec2-user /home/ec2-user/.xsession
+    chmod +x /home/ec2-user/.xsession
 
-    # Adjust SELinux if necessary
-    sudo setsebool -P httpd_can_network_connect 1
+    # 5. Optional: open RDP port if ufw enabled
+    if systemctl is-active --quiet ufw; then
+      ufw allow 3389/tcp
+      ufw reload
+    fi
   EOF
   )
 
@@ -188,19 +191,43 @@ resource "aws_launch_template" "web_launch_template" {
   }
 
   tags = {
-    Name = "linux-desktop-rdp"
+    Name = "ubuntu-mate-rdp"
   }
 }
+
 #------------AWS INSTANCE----------------------
 resource "aws_instance" "linux_vm" {
-  depends_on = [aws_launch_template.web_launch_template, aws_subnet.public_subnet1]
+  depends_on = [aws_launch_template.vm_launch_template, aws_subnet.public_subnet1]
   
   # Add the subnet_id argument here
   subnet_id = aws_subnet.public_subnet1.id
 
   launch_template {
-    id      = aws_launch_template.web_launch_template.id
+    id      = aws_launch_template.vm_launch_template.id
     version = "$Latest"
+  }
+}
+
+#---------------------DATA---------------------
+
+# Get the latest Ubuntu 22.04 LTS x86_64 AMI in us-east-2
+data "aws_ami" "ubuntu_22_04_x86" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical (official Ubuntu images)
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
   }
 }
 
